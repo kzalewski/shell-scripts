@@ -7,6 +7,7 @@
 #
 
 prog=`basename $0`
+script_dir=`dirname $0`
 
 if [ $# -ne 1 ]; then
   echo "Usage: $prog credit_card_stmt.csv" >&2
@@ -34,7 +35,7 @@ output_as_quoted_tsv() {
 
 {
   echo "TRANS DATE|POST DATE|REFERENCE NUMBER|VENDOR|AMOUNT|ORDER TYPE|ORDER NUMBER|RCH"
-  csv2psv.sh "$1" \
+  $script_dir/csv2psv.sh "$1" \
   | egrep '^[^\|]+\|([0-9?]{4} ){3}[0-9]{4} *\|' \
   | cut -d"|" -f 4-8 \
   | sed 's;  *; ;g' \
