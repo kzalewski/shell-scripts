@@ -25,17 +25,13 @@ fi
 if [ "$2" ]; then
   stmt_date="$2"
 else
-  stmt_date=`calculate_stmt_date "$csvfile"`
-fi
-
-
-calculate_stmt_date() {
-  csvfile="$1"
   cur_date=`date +"%b %Y"`
-
-  cut -d, -f1 "$csvfile" >&2
-  echo "$cur_date"
-}
+  last_date=`grep '^[0-9]' "$csvfile" | cut -d, -f1 | sort -nr | head -1`
+  stmt_date=`date -d"$last_date" +"%b %Y"`
+  if [ ! "$stmt_date" ]; then
+    stmt_date="$cur_date"
+  fi
+fi
 
 
 generate_trans_page() {
@@ -54,33 +50,33 @@ generate_trans_page() {
 
   echo "                 NEW YORK STATE SENATE FINANCIAL MANAGEMENT SYSTEM"
   echo "                     CITIBANK TRANSACTION INVOICE VERIFICATION"
-  echo "                                     $stmt_date"
+  echo "                                    $stmt_date"
   echo
   echo
   echo
-  echo "                                                RESP CTR HEAD:  $rch"
+  echo "                                        RESP CTR HEAD:  $rch"
   echo
-  echo "  PO:      $po_num"
-  echo "  TASK#:   $task_num"
-  echo "                                                INVOICE#: __________________________"
-  echo "  TYPE:    $trans_type"
-  echo
-  echo
-  echo "  TRANS DATE:  $trans_date"
-  echo "  POST DATE:   $post_date"
-  echo
-  echo "  REFERENCE#:  $ref_num"
+  echo "PO:      $po_num"
+  echo "TASK#:   $task_num"
+  echo "                                        INVOICE#: __________________________"
+  echo "TYPE:    $trans_type"
   echo
   echo
+  echo "TRANS DATE:  $trans_date"
+  echo "POST DATE:   $post_date"
   echo
-  echo "  VENDOR:      $vendor"
-  echo
-  echo "  AMOUNT:      $amount"
+  echo "REFERENCE#:  $ref_num"
   echo
   echo
   echo
+  echo "VENDOR:      $vendor"
   echo
-  echo "                               Page#:  $pgnum"
+  echo "AMOUNT:      $amount"
+  echo
+  echo
+  echo
+  echo
+  echo "                                    Page#:  $pgnum"
   echo ""
 }
 
