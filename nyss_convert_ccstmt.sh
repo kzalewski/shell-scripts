@@ -5,6 +5,7 @@
 # Organization: New York State Senate
 # Date: 2019-08-16
 # Revised: 2020-04-07 - add empty TASK column
+# Revised: 2020-12-21 - handle non-ASCII data in the ACCOUNT column
 #
 
 prog=`basename $0`
@@ -37,7 +38,8 @@ output_as_quoted_tsv() {
 {
   echo "TRANS DATE|POST DATE|REFERENCE NUMBER|VENDOR|AMOUNT|ORDER TYPE|ORDER NUMBER|TASK|RCH"
   $script_dir/csv2psv.sh "$1" \
-  | egrep '^[^\|]+\|([0-9?]{4} ){3}[0-9]{4} *\|' \
+  | tr '\200-\377' '?' \
+  | egrep '^[^\|]+\|([0-9?]{4,12} ){3}[0-9]{4} *\|' \
   | cut -d"|" -f 4-8 \
   | sed 's;  *; ;g' \
   | sed 's;$;||||;' \
