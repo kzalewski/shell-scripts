@@ -5,6 +5,7 @@
 # Organization: New York State Senate
 # Date: 2020-08-10
 # Revised: 2020-08-25 - automatically detect statement date
+# Revised: 2021-02-26 - handle date sorting across new year
 #
 
 prog=`basename $0`
@@ -26,7 +27,7 @@ if [ "$2" ]; then
   stmt_date="$2"
 else
   cur_date=`date +"%b %Y"`
-  last_date=`grep '^[0-9]' "$csvfile" | cut -d, -f1 | sort -nr | head -1`
+  last_date=`grep '^[0-9]' "$csvfile" | cut -d, -f1 | sort -nr -t/ -k3 -k1 -k2 | head -1`
   stmt_date=`date -d"$last_date" +"%b %Y"`
   if [ ! "$stmt_date" ]; then
     stmt_date="$cur_date"
