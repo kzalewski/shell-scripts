@@ -85,6 +85,7 @@ generate_trans_page() {
   IFS='|'
   pagenum=0
   $script_dir/csv2psv.sh "$1" \
+  | sed 's;\r$;;' \
   | while read -a trans_fields; do
       # If first field is not a date, skip the line
       if [[ "${trans_fields[0]}" =~ [0-9/]+ ]]; then
