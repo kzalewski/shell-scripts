@@ -130,9 +130,9 @@ generate_trans_page() {
       # If first field is not a date, skip the line
       if [[ "${trans_fields[0]}" =~ [0-9/]+ ]]; then
         (( pagenum++ ))
-        generate_trans_page "$pagenum" "${trans_fields[@]}" | eval $out_cmd
+        generate_trans_page "$pagenum" "${trans_fields[@]}"
       else
         echo "Non-transaction row: ${trans_fields[@]}" >&2
       fi
   done
-}
+} | eval $out_cmd
