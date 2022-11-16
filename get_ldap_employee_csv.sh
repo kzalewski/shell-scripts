@@ -97,7 +97,7 @@ ldapsearch -h "$host" -D "nysenate\\$user" \
            -b "$basedn" -w "$pass" -LLL \
            "(&(objectClass=user)(employeeType=SenateEmployee)(mail=*))" \
            $fieldlist | \
-awk --assign fieldlist="$fieldlist" '
+awk -v fieldlist="$fieldlist" '
 function print_csvline(a) {
   for (idx in outfields) {
     $idx = a[outfields[idx]];
