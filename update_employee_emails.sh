@@ -5,6 +5,7 @@
 # Organization: New York State Senate
 # Date: 2022-11-13
 # Revised: 2022-11-14 - exit early if no SFMS records with missing emails found
+# Revised: 2022-11-16 - call get_ldap_employee_csv.sh with new "sfms" option
 #
 
 prog=`basename $0`
@@ -56,7 +57,7 @@ empIdPattern=`cut -d, -f1 $tmpfile1 | tr '\n' '|' | sed 's;|$;;'`
 # from LDAP.  Then match against the list of employee IDs with missing emails.
 
 logtime "Pulling email addresses from LDAP and matching against previous list"
-$script_dir/get_ldap_employee_csv.sh | cut -d, -f1,2 | egrep "^($empIdPattern)," > $tmpfile2
+$script_dir/get_ldap_employee_csv.sh sfms | cut -d, -f1,2 | egrep "^($empIdPattern)," > $tmpfile2
 
 if [ ! -s "$tmpfile2" ]; then
   logtime "No matching records from LDAP were found"
