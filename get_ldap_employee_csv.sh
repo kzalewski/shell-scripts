@@ -98,19 +98,23 @@ ldapsearch -h "$host" -D "nysenate\\$user" \
            "(&(objectClass=user)(employeeType=SenateEmployee)(mail=*))" \
            $fieldlist | \
 awk -v fieldlist="$fieldlist" '
-function print_csvline(a) {
-  for (idx in outfields) {
-    $idx = a[outfields[idx]];
-    if (match($idx, ",")) {
-      $idx = "\"" $idx "\"";
+function print_csvline(a,    idx, fieldval) {
+  for (idx = 1; idx <= outfield_count; idx++) {
+    fieldval = a[outfields[idx]];
+    if (match(fieldval, ",")) {
+      fieldval = "\"" fieldval "\"";
     }
+    if (idx > 1) {
+      printf(",");
+    }
+    printf("%s", fieldval);
   }
-  print;
+  printf("\n");
 }
 BEGIN {
   FS = ":";
   OFS = ",";
-  split(fieldlist, outfields, " ");
+  outfield_count = split(fieldlist, outfields, " ");
   printed = 1;
 }
 /^(cn|department|displayName|dn|employeeID|givenName|l|mail|name|postalCode|roomNumber|sn|st|street|telephoneNumber|title):/ {
