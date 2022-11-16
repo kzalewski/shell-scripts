@@ -5,6 +5,9 @@
 # Organization: New York State Senate
 # Date: 2022-11-13
 # Revised: 2022-11-14 - add config file for LDAP auth parameters
+# Revised: 2022-11-16 - add multiple output formats (full, sfms, phonedir)
+#                     - allow configuration of LDAP params from command line
+#                     - provide ability to suppress header row
 #
 
 prog=`basename $0`
@@ -15,6 +18,12 @@ host=
 user=
 pass=
 basedn=
+show_header=1
+format=standard
+
+usage() {
+  echo "Usage: $prog [--host HOSTNAME] [--user USERNAME] [--pass PASSWORD] [--basedn BASEDN] [standard|full|sfms|phonedir]" >&2
+}
 
 logtime() {
   ts=`date +%Y-%m-%dT%H:%M:%S`
@@ -22,6 +31,47 @@ logtime() {
 }
 
 [ -r "$cfgfile" ] && . "$cfgfile"
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --host|-h) shift; host="$1" ;;
+    --user|-u) shift; user="$1" ;;
+    --pass|-p) shift; pass="$1" ;;
+    --basedn|-b) shift; basedn="$1" ;;
+    --no-header|-n) show_header=0 ;;
+    -*) echo "$prog: $1: Invalid option" >&2; usage; exit 1 ;;
+    standard|full|sfms|phonedir) format="$1" ;;
+    *) echo "$prog: $1: Invalid output format" >&2; usage; exit 1 ;;
+  esac
+  shift
+done
+
+case "$format" in
+  standard)
+    fieldlist="displayName mail telephoneNumber"
+    headerline="Full Name,Email,Phone"
+    sortfld=2
+    sortopt=
+    ;;
+  full)
+    fieldlist="employeeID sn givenName displayName name mail telephoneNumber department title roomNumber street l st postalCode cn dn"
+    headerline="Emp ID,Last Name,First Name,Full Name,Username,Email,Phone,Department,Title,Location,Street,City,State,Zip,CN,DN"
+    sortfld=1
+    sortopt="-n"
+    ;;
+  sfms)
+    fieldlist="employeeID mail displayName"
+    headerline=
+    sortfld=1
+    sortopt="-n"
+    ;;
+  phonedir)
+    fieldlist="sn givenName mail telephoneNumber title department street l postalCode"
+    headerline="Last Name,First Name,Email,Phone,Title,Department,Street,City,Zip"
+    sortfld=1
+    sortopt=
+    ;;
+esac
 
 if [ ! "$host" ]; then
   echo "$prog: Must specify LDAP hostname with 'host=' config parameter" >&2
@@ -39,25 +89,44 @@ fi
 
 set -o pipefail
 
+if [ "$headerline" -a $show_header -eq 1 ]; then
+  echo "$headerline"
+fi
+
 ldapsearch -h "$host" -D "nysenate\\$user" \
            -b "$basedn" -w "$pass" -LLL \
-           "(&(employeeType=SenateEmployee)(mail=*))" \
-           employeeID mail displayName | \
-awk 'BEGIN {
+           "(&(objectClass=user)(employeeType=SenateEmployee)(mail=*))" \
+           $fieldlist | \
+awk --assign fieldlist="$fieldlist" '
+function print_csvline(a) {
+  for (idx in outfields) {
+    $idx = a[outfields[idx]];
+    if (match($idx, ",")) {
+      $idx = "\"" $idx "\"";
+    }
+  }
+  print;
+}
+BEGIN {
   FS = ":";
   OFS = ",";
+  split(fieldlist, outfields, " ");
+  printed = 1;
 }
-/^(displayName|employeeID|mail|name):/ {
-  sub(/[ ]+/, "", $2);
-  csvline[$1] = $2;
+/^(cn|department|displayName|dn|employeeID|givenName|l|mail|name|postalCode|roomNumber|sn|st|street|telephoneNumber|title):/ {
+  attr_name = $1;
+  sub(/^[^:]+:[ ]*/, "", $0);
+  csvline[attr_name] = $0;
+  printed = 0;
 }
 /^$/ {
-  print csvline["employeeID"], csvline["mail"], csvline["displayName"];
-  csvline["employeeID"] = "";
+  print_csvline(csvline);
+  printed = 1;
 }
 END {
-  if (csvline["employeeID"]) {
-    print csvline["employeeID"], csvline["mail"], csvline["displayName"];
+  if (!printed) {
+    print_csvline(csvline);
   }
-}' | sort -n -t , -k 1
+}' | sort $sortopt -t , -k $sortfld
 
+exit 0
