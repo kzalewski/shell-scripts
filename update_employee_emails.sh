@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/bash
 #
 # Project: Senate Financial Management System
 # Author: Ken Zalewski
@@ -6,6 +6,7 @@
 # Date: 2022-11-13
 # Revised: 2022-11-14 - exit early if no SFMS records with missing emails found
 # Revised: 2022-11-16 - call get_ldap_employee_csv.sh with new "sfms" option
+# Revised: 2022-11-22 - force usage of Bash (necessary on AIX)
 #
 
 prog=`basename $0`

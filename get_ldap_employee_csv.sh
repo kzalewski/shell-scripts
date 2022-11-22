@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/bash
 #
 # Project: shell-scripts
 # Author: Ken Zalewski
@@ -8,6 +8,7 @@
 # Revised: 2022-11-16 - add multiple output formats (full, sfms, phonedir)
 #                     - allow configuration of LDAP params from command line
 #                     - provide ability to suppress header row
+# Revised: 2022-11-22 - force usage of Bash (necessary on AIX)
 #
 
 prog=`basename $0`
