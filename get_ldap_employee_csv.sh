@@ -9,12 +9,13 @@
 #                     - allow configuration of LDAP params from command line
 #                     - provide ability to suppress header row
 # Revised: 2022-11-22 - force usage of Bash (necessary on AIX)
+# Revised: 2022-11-23 - search for config file in /etc, $HOME, and $script_dir
 #
 
 prog=`basename $0`
 script_dir=`dirname $0`
 script_dir=`cd $script_dir; pwd -P`
-cfgfile=$script_dir/ldap.cfg
+cfgfilename=senldap.cfg
 host=
 user=
 pass=
@@ -31,7 +32,14 @@ logtime() {
   echo "$ts $1" >&2
 }
 
-[ -r "$cfgfile" ] && . "$cfgfile"
+# Search for the config file in /etc, $HOME, and the current script directory.
+# The config file can be stored in more than one of these directories, with
+# each config file adding to, or replacing, any settings in the previous one(s).
+
+for cfgdir in /etc $HOME $script_dir; do
+  cfgfile="$cfgdir/$cfgfilename"
+  [ -r "$cfgfile" ] && . "$cfgfile"
+done
 
 while [ $# -gt 0 ]; do
   case "$1" in
